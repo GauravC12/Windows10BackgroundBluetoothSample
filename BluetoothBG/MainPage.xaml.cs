@@ -408,5 +408,12 @@ namespace BluetoothBG
                 }
             }
         }
+
+        private async void fetchReceivedFile_Click(object sender, RoutedEventArgs e)
+        {
+            var files = await ApplicationData.Current.LocalFolder.GetFilesAsync();
+            int count = files.Count;
+            statusTextBlock.Text = "NUMBER OF FILES: " + count;
+        }
     }
 }

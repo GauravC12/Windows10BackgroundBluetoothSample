@@ -132,6 +132,10 @@
       <Project>{65ef0a3a-cd31-49d2-b013-450e281a23ad}</Project>
       <Name>BluetoothBG.BackgroundTask</Name>
     </ProjectReference>
+    <ProjectReference Include="..\BluetoothBG.Util\BluetoothBG.Util.csproj">
+      <Project>{34de5506-da36-45ee-8726-b9db2fce6f3f}</Project>
+      <Name>BluetoothBG.Util</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

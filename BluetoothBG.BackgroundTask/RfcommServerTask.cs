@@ -1,15 +1,18 @@
-﻿using System;
+﻿using BluetoothBG.Util;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
+using Windows.Data.Xml.Dom;
 using Windows.Devices.Bluetooth.Background;
 using Windows.Networking.Sockets;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System.Threading;
+using Windows.UI.Notifications;
 
 namespace BluetoothBG.BackgroundTask
 {
@@ -75,29 +78,80 @@ namespace BluetoothBG.BackgroundTask
 
         private async Task<int> ReceiveDataAsync()
         {
-            while (true)
+            IStorageFile file = null;
+            string message = "";
+            try
             {
-                uint readLength = await reader.LoadAsync(sizeof(uint));
-                if (readLength < sizeof(uint))
-                {
-                    ApplicationData.Current.LocalSettings.Values["IsBackgroundTaskActive"] = false;
-                    // Complete the background task (this raises the OnCompleted event on the corresponding BackgroundTaskRegistration). 
-                    deferral.Complete();
-                }
-                uint currentLength = reader.ReadUInt32();
-
-                readLength = await reader.LoadAsync(currentLength);
-                if (readLength < currentLength)
-                {
-                    ApplicationData.Current.LocalSettings.Values["IsBackgroundTaskActive"] = false;
-                    // Complete the background task (this raises the OnCompleted event on the corresponding BackgroundTaskRegistration). 
-                    deferral.Complete();
-                }
-                string message = reader.ReadString(currentLength);
-
-                ApplicationData.Current.LocalSettings.Values["ReceivedMessage"] = message;
-                taskInstance.Progress += 1;
+                file = await BluetoothTransferHelper.GetInstance().ReadFileAsync(socket, ApplicationData.Current.LocalFolder);
+                message = file.Name;
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.ToString());
+                message = ex.ToString();
+            }
+            
+            //string message = await BluetoothTransferHelper.GetInstance().ReadMessageAsync(socket);
+            //ApplicationData.Current.LocalSettings.Values["ReceivedMessage"] = message;
+
+            var notifier = ToastNotificationManager.CreateToastNotifier();
+            string xmlText = @"
+<?xml version='1.0' encoding='utf-8' ?>
+<toast>
+<visual>
+<binding template='ToastGeneric'>                            
+<text hint-style='header'>Bluetooth BG</text>
+<text hint-style='header'>Received Message</text>
+<text hint-style='body'>{0}</text>
+</binding>
+</visual>  
+</toast>";
+            xmlText = string.Format(xmlText, message);
+            XmlDocument toastXml = new XmlDocument();
+            toastXml.LoadXml(xmlText.Trim());
+            notifier.Show(new ToastNotification(toastXml));
+            deferral.Complete();
+            return 0;
+//            while (false)
+//            {                
+//                uint readLength = await reader.LoadAsync(sizeof(uint));
+//                if (readLength < sizeof(uint))
+//                {
+//                    ApplicationData.Current.LocalSettings.Values["IsBackgroundTaskActive"] = false;
+//                    // Complete the background task (this raises the OnCompleted event on the corresponding BackgroundTaskRegistration). 
+//                    deferral.Complete();
+//                }
+//                uint currentLength = reader.ReadUInt32();
+
+//                readLength = await reader.LoadAsync(currentLength);
+//                if (readLength < currentLength)
+//                {
+//                    ApplicationData.Current.LocalSettings.Values["IsBackgroundTaskActive"] = false;
+//                    // Complete the background task (this raises the OnCompleted event on the corresponding BackgroundTaskRegistration). 
+//                    deferral.Complete();
+//                }
+//                string message = reader.ReadString(currentLength);
+
+//                ApplicationData.Current.LocalSettings.Values["ReceivedMessage"] = message;
+//                var notifier = ToastNotificationManager.CreateToastNotifier();
+//                string xmlText = @"
+//<?xml version='1.0' encoding='utf-8' ?>
+//<toast>
+//<visual>
+//<binding template='ToastGeneric'>                            
+//<text hint-style='header'>Bluetooth BG</text>
+//<text hint-style='header'>Received Message</text>
+//<text hint-style='body'>{0}</text>
+//</binding>
+//</visual>  
+//</toast>";
+//                xmlText = string.Format(xmlText, message);
+//                XmlDocument toastXml = new XmlDocument();
+//                toastXml.LoadXml(xmlText.Trim());
+//                notifier.Show(new ToastNotification(toastXml));
+//                deferral.Complete();
+//                //taskInstance.Progress += 1;
+//            }
         }
 
         /// <summary>
@@ -114,7 +168,7 @@ namespace BluetoothBG.BackgroundTask
                     try
                     {
                         // Make sure that the connection is still up and there is a message to send
-                        if (socket != null)
+                        if (socket != null && message != null)
                         {
                             writer.WriteUInt32((uint)message.Length);
                             writer.WriteString(message);

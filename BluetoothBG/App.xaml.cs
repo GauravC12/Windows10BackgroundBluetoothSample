@@ -1,12 +1,16 @@
-﻿using System;
+﻿using BluetoothBG.Util;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.DataTransfer.ShareTarget;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -100,6 +104,44 @@ namespace BluetoothBG
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: Save application state and stop any background activity
             deferral.Complete();
+        }
+
+        protected async override void OnShareTargetActivated(ShareTargetActivatedEventArgs args)
+        {
+            base.OnShareTargetActivated(args);
+            await Task.Factory.StartNew(async () => {
+                ShareOperation shareOperation = args.ShareOperation;
+                if (shareOperation.Data.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems))
+                {
+                    // Data being shared contains one or more StorageItem. Code to process the StorageItems goes here.
+                    IReadOnlyList<IStorageItem> sharedStorageItems = await shareOperation.Data.GetStorageItemsAsync();
+
+                    // Initialize Bluetooth Connection
+                    var supportedDevices = await BluetoothTransferHelper.GetInstance().FindSupportedDevicesAsync(Constants.RfcommServiceIdentifier);
+
+                    string deviceId = supportedDevices.First().Id;
+                    try
+                    {
+
+                        await BluetoothTransferHelper.GetInstance().SendFileAsync(deviceId, sharedStorageItems);
+                    }
+                    catch (Exception ex)
+                    {
+                        shareOperation.ReportError(ex.Message);
+                    }
+                    //string fileNames = "";
+                    //for (int index = 0; index < sharedStorageItems.Count; index++)
+                    //{
+                    //    fileNames += sharedStorageItems[index].Name;
+                    //    if (index < sharedStorageItems.Count - 1)
+                    //    {
+                    //        fileNames += ", ";
+                    //    }
+                    //}
+
+                }
+                shareOperation.ReportCompleted();
+            });
         }
     }
 }

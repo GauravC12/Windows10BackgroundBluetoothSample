@@ -14,6 +14,7 @@
             <Button x:Name="sendMessage" Content="Send Message" HorizontalAlignment="Center" Click="sendMessage_Click" Margin="10" Width="200"/>
             <Button x:Name="registerBackgroundWorker" Content="Register BG Worker" HorizontalAlignment="Center" Margin="10" Click="registerBackgroundWorker_Click" Width="200"/>
             <Button x:Name="fetchReceivedMessage" Content="Fetch Received Message" HorizontalAlignment="Center" Click="fetchReceivedMessage_Click" Margin="10" Width="200"/>
+            <Button x:Name="fetchReceivedFile" Content="Fetch Received File" HorizontalAlignment="Center" Click="fetchReceivedFile_Click" Margin="10" Width="200"/>
             <TextBlock x:Name="statusTextBlock" HorizontalAlignment="Center" TextWrapping="Wrap" Margin="20"/>
         </StackPanel>
     </Grid>

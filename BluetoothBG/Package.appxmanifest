@@ -21,14 +21,21 @@
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
       <Extensions>
-        <Extension Category="windows.backgroundTasks" EntryPoint="BluetoothBG.BackgroundTask.BackgroundSendingTask">
+        <uap:Extension Category="windows.shareTarget">
+          <uap:ShareTarget>
+            <uap:SupportedFileTypes>
+              <uap:SupportsAnyFileType />
+            </uap:SupportedFileTypes>
+          </uap:ShareTarget>
+        </uap:Extension>
+        <Extension Category="windows.backgroundTasks" EntryPoint="BluetoothBG.BackgroundTask.RfcommServerTask">
           <BackgroundTasks>
-            <Task Type="timer" />
             <Task Type="bluetooth" />
           </BackgroundTasks>
         </Extension>
-        <Extension Category="windows.backgroundTasks" EntryPoint="BluetoothBG.BackgroundTask.RfcommServerTask">
+        <Extension Category="windows.backgroundTasks" EntryPoint="BluetoothBG.BackgroundTask.BackgroundSendingTask">
           <BackgroundTasks>
+            <Task Type="timer" />
             <Task Type="bluetooth" />
           </BackgroundTasks>
         </Extension>
